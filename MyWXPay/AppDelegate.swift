@@ -9,13 +9,32 @@
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate ,WXApiDelegate{
 
     var window: UIWindow?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        
+        let vc = RootViewController()
+        let nav = BaseNavigationController(rootViewController: vc)
+        
+        
+        nav.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.white]
+        
+        nav.navigationBar.barTintColor = UIColor(red: 246/255.0, green: 93/255.0, blue: 34/255.0, alpha: 1)
+        
+        self.window?.rootViewController = nav
+        
+        
+        WXApi.registerApp(WX_APPID, withDescription: "apppay")
+
+        
+        UIApplication.shared.setStatusBarStyle(UIStatusBarStyle.lightContent, animated: true)
+        
+        UIApplication.shared.statusBarStyle = .lightContent
+        
         return true
     }
 
@@ -41,6 +60,54 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
+    
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        
+
+        if let urlsc = url.scheme {
+            
+            if urlsc == WX_APPID {
+                
+                return WXApi.handleOpen(url, delegate: self)
+            }
+        }
+        
+        print("回调失败")
+        return false
+    }
+    
+    func onResp(_ resp: BaseResp!) {
+
+        print(resp.errCode)
+
+        switch resp.errCode {
+        case WXSuccess.rawValue:
+            let strMsg = "支付结果：成功！"
+            let alret = UIAlertView(title: nil, message: "支付成功！", delegate: nil, cancelButtonTitle: "确定")
+            alret.show()
+            print(strMsg)
+            
+        case WXErrCodeUserCancel.rawValue:
+            let alret = UIAlertView(title: nil, message: "取消支付", delegate: nil, cancelButtonTitle: "确定")
+            alret.show()
+            
+        default:
+            
+            print("支付错误，其他处理")
+            
+            let alret = UIAlertView(title: nil, message: "支付取消", delegate: nil, cancelButtonTitle: "确定")
+            alret.show()
+            
+            
+            break
+        }
+    
+        
+    }
+    
+    
+   
 
 }
 
